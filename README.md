@@ -1,4 +1,6 @@
 # PBC_project
+---
+## goal 
 we want to scan the invoice and provide some serivce with the line bot 
 Our stuff will be stored on a server. Basically, the data we need to receive includes line commands (e.g. February invoice) and photos recognized by Line. Then, we put the recognized numbers into the database on the server.
 
