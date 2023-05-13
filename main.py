@@ -1,52 +1,38 @@
 import mysql.connector
 
-def store_invoice_data(invoice_number, cost, invoice_time):
-    # Establish connection to the SQL Server
-    cnx = mysql.connector.connect(
-        host='localhost',
-        user='your_username',
-        password='your_password',
-        database='your_database'
-    )
-    cursor = cnx.cursor()
+# Connect to the MySQL server
+cnx = mysql.connector.connect(
+    host="localhost",
+    user="pbc",
+    password="jeffrey",
+    database="invoice"
+)
 
-    # Insert the invoice data into the database
-    query = "INSERT INTO invoices (invoice_number, cost, invoice_time) VALUES (%s, %s, %s)"
-    values = (invoice_number, cost, invoice_time)
-    cursor.execute(query, values)
+# Create a cursor object to execute SQL queries
+cursor = cnx.cursor()
 
-    # Commit the changes and close the connection
-    cnx.commit()
-    cursor.close()
-    cnx.close()
+# Example query to insert data into the "invoice" table
+query = "INSERT INTO invoice (invoice_number, customer_name, total_amount) VALUES (%s, %s, %s)"
+values = (1234, "John Doe", 100.50)
 
-def check_invoice_number(invoice_number):
-    # Establish connection to the SQL Server
-    cnx = mysql.connector.connect(
-        host='localhost',
-        user='your_username',
-        password='your_password',
-        database='your_database'
-    )
-    cursor = cnx.cursor()
+create_table_query = """
+CREATE TABLE items (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(255),
+    price DECIMAL(10, 2)
+)
+"""
 
-    # Search for the invoice number in the database
-    query = "SELECT * FROM invoices WHERE invoice_number = %s"
-    values = (invoice_number,)
-    cursor.execute(query, values)
-    result = cursor.fetchall()
+cursor.execute(create_table_query)
 
-    # Process the result
-    if len(result) > 0:
-        print("Invoice number found!")
-        # Do something with the matching data
-    else:
-        print("Invoice number not found.")
+insert_query = "INSERT INTO items (name, price) VALUES (%s, %s)"
+item = ("Product A", 9.99)
 
-    # Close the connection
-    cursor.close()
-    cnx.close()
+cursor.execute(insert_query, item)
 
-# Example usage
-store_invoice_data('INV001', 100.50, '2023-05-12')
-check_invoice_number('INV001')
+# Commit the changes to the database
+cnx.commit()
+
+# Close the cursor and the database connection
+cursor.close()
+cnx.close()
