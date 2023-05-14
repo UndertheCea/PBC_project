@@ -20,9 +20,8 @@ def create_table():
     create_table_query = """
     CREATE TABLE users (
         user_id INT AUTO_INCREMENT PRIMARY KEY,
-        username VARCHAR(255),
-        email VARCHAR(255),
-        -- Additional user information columns...
+        username VARCHAR(255)
+
     );
 
     CREATE TABLE invoices (
@@ -30,7 +29,7 @@ def create_table():
         user_id INT,
         invoice_number VARCHAR(255),
         invoice_date DATE,
-        -- Additional invoice information columns...
+
         FOREIGN KEY (user_id) REFERENCES users(user_id)
     );
 
@@ -39,24 +38,29 @@ def create_table():
 
 if __name__ == "__main__":
     cnx, cursor = connect_to_SQL()
-    cursor.execute(create_table())
+    # create_table_query = create_table()
+    # for query in create_table_query.split(";"):
+    #     cursor.execute(query)
+    # cnx.commit()
 
     # example 
     user_id = 1
+    insert_query = "INSERT INTO users (user_id) VALUES (%s)"
+    user_data = (user_id,)
+    cursor.execute(insert_query, user_data)
+    cnx.commit()
     insert_query = "INSERT INTO invoices (user_id, invoice_number, invoice_date) VALUES (%s, %s, %s)"
     invoice_data = (user_id, "MK-88888888", "2023-05-14")  
     cursor.execute(insert_query, invoice_data)
+    cnx.commit()
     
-
-
 
 
     # Execute the query to drop the table
     # drop_table_query = "DROP TABLE items;"
     # cursor.execute(drop_table_query)
 
-    # Commit the changes to the database
-    cnx.commit()
+
 
     # Close the cursor and the database connection
     cursor.close()
