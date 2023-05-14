@@ -33,5 +33,6 @@ SELECT * FROM items;
 ```
 
 ## problem solving 
-https://ui-code.com/archives/293
-https://www.cnblogs.com/ywb123/p/16696584.html
+- https://ui-code.com/archives/293
+- https://www.cnblogs.com/ywb123/p/16696584.html
+- https://www.digitalocean.com/community/tutorials/how-to-create-a-new-user-and-grant-permissions-in-mysql
