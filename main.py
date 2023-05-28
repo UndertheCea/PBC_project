@@ -14,7 +14,6 @@ def connect_to_SQL():
     cursor = cnx.cursor()
     return cnx, cursor
 
-
 def create_table():
     cnx, cursor = connect_to_SQL()
     cursor.execute("SHOW TABLES LIKE 'users';")
@@ -49,6 +48,8 @@ def create_table():
             invoice_year INT,
             invoice_amount DECIMAL(10,2),
             invoice_number_last_three INT,
+            invoice_tag VARCHAR(255),
+            
             FOREIGN KEY (user_id) REFERENCES users(user_id)
         );
 
@@ -79,12 +80,9 @@ def split_date_2(date_string):
     year, month = date_string.split('/')
     return int(year), int(month)
 
-
 def strip_day(date_str):
     year, month, _ = date_str.split('/')
     return year + '/' + month
-
-            
 
 def insert_user(user_id):
     cnx, cursor = connect_to_SQL()
@@ -105,31 +103,93 @@ def insert_user(user_id):
     # Close the cursor and connection
     cursor.close()
     cnx.close()
-
-def insert_invoice(user_id, invoice_number, invoice_date, invoice_amount):
-    cnx, cursor = connect_to_SQL()
     
+def list_users():
+    cnx, cursor = connect_to_SQL()
+    select_query = "SELECT * FROM users"
+    cursor.execute(select_query)
+    users = cursor.fetchall()
+    user_dict = {}
+    for user in users:
+        user_dict[user[0]] = user[1]
+
+    # Close the cursor and connection
+    cursor.close()
+    cnx.close()
+    
+    return user_dict
+
+def insert_invoice(user_id, invoice_number, invoice_date, invoice_amount, invoice_tag):
+    cnx, cursor = connect_to_SQL()
+
     select_query = "SELECT * FROM users WHERE user_id = %s"
     user_data = (user_id,)
     cursor.execute(select_query, user_data)
     user_exists = cursor.fetchone() is not None
     year, month, day = split_date_3(invoice_date)
-    if user_exists:
+
+    if not user_exists:
+        print("User does not exist")
+        insert_user(user_id)
+    
+    select_invoice_query = "SELECT * FROM invoices WHERE user_id = %s AND invoice_number = %s"
+    invoice_data = (user_id, invoice_number)
+    cursor.execute(select_invoice_query, invoice_data)
+    invoice_exists = cursor.fetchone() is not None
+    
+    if invoice_exists:
+        print("Invoice already exists for this user and invoice number")
+    else:
         insert_query = """INSERT INTO invoices (user_id, invoice_number, invoice_date, 
                                                 invoice_number_last_three, invoice_amount,
-                                                invoice_year, invoice_month) VALUES (%s, %s, %s, %s, %s, %s, %s);"""
-        invoice_data = (user_id, invoice_number, invoice_date, invoice_number[-3:], invoice_amount, year, month)
+                                                invoice_year, invoice_month, invoice_tag) VALUES (%s, %s, %s, %s, %s, %s, %s, %s);"""
+        invoice_data = (user_id, invoice_number, invoice_date, invoice_number[-3:], invoice_amount, year, month, invoice_tag)
         cursor.execute(insert_query, invoice_data)
         cnx.commit()
         print("Invoice inserted successfully")
-    else:
-        print("User does not exist")
-        insert_user(user_id)
-        invoice_data = (user_id, invoice_number, invoice_date, invoice_number[-3:], invoice_amount)
-        
+
     # Close the cursor and connection
     cursor.close()
     cnx.close()
+
+def insert_expense(user_id, invoice_date, invoice_amount, invoice_tag):
+    cnx, cursor = connect_to_SQL()
+
+    select_query = "SELECT * FROM users WHERE user_id = %s"
+    user_data = (user_id,)
+    cursor.execute(select_query, user_data)
+    user_exists = cursor.fetchone() is not None
+    year, month, day = split_date_3(invoice_date)
+
+    if not user_exists:
+        print("User does not exist. Add user!")
+        insert_user(user_id)
+        cursor.execute(select_query, user_data)
+        user_exists = cursor.fetchone() is not None
+
+    if user_exists:
+        select_expense_query = "SELECT * FROM invoices WHERE user_id = %s AND invoice_date = %s AND invoice_amount = %s AND invoice_tag = %s"
+        expense_data = (user_id, invoice_date, invoice_amount, invoice_tag)
+        cursor.execute(select_expense_query, expense_data)
+        expense_exists = cursor.fetchone() is not None
+        
+        if expense_exists:
+            print("Expense already exists for this user, date, amount, and tag")
+        else:
+            insert_query = """INSERT INTO invoices (user_id, invoice_date, 
+                                                    invoice_amount,
+                                                    invoice_year, invoice_month, invoice_tag) VALUES (%s, %s, %s, %s, %s, %s);"""
+            invoice_data = (user_id, invoice_date, invoice_amount, year, month, invoice_tag)
+            cursor.execute(insert_query, invoice_data)
+            cnx.commit()
+            print("Expense inserted successfully")
+    else:
+        print("User does not exist")
+
+    # Close the cursor and connection
+    cursor.close()
+    cnx.close()
+
     
 def drop_table(table_name):
     cnx, cursor = connect_to_SQL()
@@ -197,6 +257,7 @@ def count_normal(invoice_number, user_id, date):
 
     # Process and print the matching invoices
     total = 0
+    Invoice_number_and_price = {}
     for row in result:
         this_number = 0
         length = 0
@@ -207,22 +268,28 @@ def count_normal(invoice_number, user_id, date):
                 length += 1
         if length == 3:
             this_number = 200
+            Invoice_number_and_price[row[2]] = 200
         elif length == 4:
             this_number = 1000
+            Invoice_number_and_price[row[2]] = 1000
         elif length == 5:
             this_number = 4000
+            Invoice_number_and_price[row[2]] = 4000
         elif length == 6:
             this_number = 10000
+            Invoice_number_and_price[row[2]] = 10000
         elif length == 7:
             this_number = 40000
+            Invoice_number_and_price[row[2]] = 40000
         elif length == 8:
-            this_number = 200000   
+            this_number = 200000
+            Invoice_number_and_price[row[2]] = 200000   
         total += this_number
-
+    Invoice_number_and_price['total'] = total
     # Close the cursor and connection
     cursor.close()
     cnx.close()
-    return total
+    return Invoice_number_and_price
     
 def add_up_persons_monthly_cost(user_id, date):
     cnx, cursor = connect_to_SQL()
@@ -234,15 +301,19 @@ def add_up_persons_monthly_cost(user_id, date):
     cursor.execute(select_query, invoice_data)
     result = cursor.fetchall()
     total = 0
+    result_list = []
     for row in result:
         total += row[6] # represent the invoice amount 
+        result_list.append([row[3], row[8], row[6]])
+        # row[3]: 日期, row[8]: 標籤, row[6]: 價格
+    
         
     print(f"The total amount for {user_id} in {date} is: {total}")
     
     # Close the cursor and connection
     cursor.close()
     cnx.close()
-    return total
+    return total, result_list
         
 def count_special(invoice_number, user_id, date):
     cnx, cursor = connect_to_SQL()
@@ -256,17 +327,20 @@ def count_special(invoice_number, user_id, date):
     result = cursor.fetchall()
     
     count = 0
-    for _ in result:
+    Invoice_number_and_price = {}
+    for row in result:
         count += 1
+        Invoice_number_and_price[row[2]] = 1000000
+
     
     money = 10000000*count
+    Invoice_number_and_price["total"] = money
 
     # Close the cursor and connection
     cursor.close()
     cnx.close()
     
-    return money
-
+    return Invoice_number_and_price
 
 def count_super (invoice_number, user_id, date):
     cnx, cursor = connect_to_SQL()
@@ -280,35 +354,45 @@ def count_super (invoice_number, user_id, date):
     result = cursor.fetchall()
     
     count = 0
-    for _ in result:
+    Invoice_number_and_price = {}
+    for row in result:
         count += 1
+        Invoice_number_and_price[row[2]] = 2000000
     
     money = 2000000*count
-
+    Invoice_number_and_price["total"] = money
     # Close the cursor and connection
     cursor.close()
     cnx.close()
     
-    return money
+    return Invoice_number_and_price
 
 
 if __name__ == "__main__":
     # example 
-    drop_table("invoices")
-    drop_table("users")
+    # drop_table("invoices")
+    # drop_table("users")
     create_table()
     insert_user("A123456789")
     # insert_invoice(user_id, invoice_number, invoice_date, invoice_amount):
-    insert_invoice("A123456789", "AA12345678", "2020/01/01", 100)     
-    insert_invoice("A123456789", "AA12345243", "2020/02/01", 200)
-    insert_invoice("A123456789", "AA12245245", "2020/03/01", 300)
-    insert_invoice("A123456789", "AA24545678", "2020/04/01", 400)
-    insert_invoice("A123456789", "AA12345670", "2020/01/01", 100) 
+    insert_invoice("A123456789", "AA12345678", "2020/01/01", 100, "invoice")     
+    insert_invoice("A123456789", "AA12345243", "2020/02/01", 200, "invoice")
+    insert_invoice("A123456789", "AA12245245", "2020/03/01", 300, "invoice")
+    insert_invoice("A123456789", "AA24545678", "2020/04/01", 400, "invoice")
+    insert_invoice("A123456789", "AA12345670", "2020/01/01", 100, "invoice") 
     
-    insert_invoice("B123456789", "BB12345678", "2020/01/01", 100)     
-    insert_invoice("B123456789", "BB12345243", "2020/02/01", 200)
-    insert_invoice("B123456789", "BB12245245", "2020/03/01", 300)
-    insert_invoice("B123456789", "BB24545678", "2020/04/01", 400)
+    insert_invoice("B123456789", "BB12345678", "2020/01/01", 100, "invoice")     
+    insert_invoice("B123456789", "BB12345243", "2020/02/01", 200, "invoice")
+    insert_invoice("B123456789", "BB12245245", "2020/03/01", 300, "invoice")
+    insert_invoice("B123456789", "BB24545678", "2020/04/01", 400, "invoice")
+    insert_invoice("A123456789", "BBBBBB5678", "2020/01/01", 100, "invoice")
+    insert_invoice("A123456789", "CCCCCC5678", "2020/01/01", 100, "invoice")
+    
+    # insert_expense(user_id, invoice_date, invoice_amount, invoice_tag):
+    insert_expense("A123456789", "2020/01/01", 100, "expense")
+    insert_expense("B123456789", "2020/02/01", 200, "expense")
+    print("list users:")
+    print(list_users())
     display_table("users")
     print("before sort: ")
     display_table("invoices")
