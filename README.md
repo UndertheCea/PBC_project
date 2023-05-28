@@ -8,7 +8,37 @@ We need to output data to that Line platform, which means we output the correspo
 
 
 
+## example 
+``` python
+if __name__ == "__main__":
+    # example 
+    date = "2020/01/01"
+    # create table 
+    create_table()
+    insert_user("A123456789")
+    insert_invoice("A123456789", "AA12345678", date, 100, "invoice")     
+    insert_expense("B123456789", date, 200, "expense")
+    
+    # list all user
+    print(list_users())
+    # list two table 
+    display_table("users")
+    display_table("invoices")
 
+    # reform the date
+    day_new = strip_day(date) # day_new = "2020/01"
+    
+    # show the result 
+    print(count_normal("AA12345678", "A123456789", day_new))
+    print(add_up_persons_monthly_cost("A123456789", day_ new))
+    print(count_special("AA12345678", "A123456789", day_new))
+    print(count_super("AA12345678", "A123456789", day_new))
+
+    # delete table
+    drop_table("invoices")
+    drop_table("users")
+    
+```
 
 
 ## function information !!! 
@@ -66,7 +96,7 @@ insert_invoice(user_id, invoice_number, invoice_date, invoice_amount, invoice_ta
 ```
 Just follow the format, and it will insert the invoice into the database. 
 
-> note that the date should be in the format of YYYY/MM/DD.
+> Note that the date should be in the format of YYYY/MM/DD.
 
 ```
 insert_expense(user_id, invoice_date, invoice_amount, invoice_tag)
@@ -101,7 +131,7 @@ It count the price within (200, 1000, 4000, 10000, 40000, 200000).
 
 It returns a dict with the key is the invoice_number and the value is the the winning price of the invoice number.
 
-> note that the date should be in the format of YYYY/MM
+> Note that the date should be in the format of YYYY/MM
 
 ```
 add_up_persons_monthly_cost(user_id, date)
@@ -110,7 +140,7 @@ Add up both invoice and expense of the user_id in certain month.
 
 It return a integer named total and a list showing the invoice and expense in this month.
 
-Note that the date should be in the format of YYYY/MM. 
+> Note that the date should be in the format of YYYY/MM. 
 
 ```
 count_special(invoice_number, user_id, date)
@@ -119,7 +149,7 @@ It count the price within (10000000).
 
 It return a dict with the key is the invoice_number and the value is 10000000. also one key is called "total", shows the totale price he wins.
 
-> note that the date should be in the format of YYYY/MM.
+> Note that the date should be in the format of YYYY/MM.
 
 ```
 count_super (invoice_number, user_id, date)
@@ -127,7 +157,7 @@ count_super (invoice_number, user_id, date)
 Mainly the same as ```count_special```
 but the price is within (20000000). 
 
-Note that the date should be in the format of YYYY/MM. 
+> Note that the date should be in the format of YYYY/MM. 
 
 
 ## procedure of controlling directly using SQL 
