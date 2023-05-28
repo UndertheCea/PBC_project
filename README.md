@@ -6,74 +6,33 @@ Our stuff will be stored on a server. Basically, the data we need to receive inc
 
 We need to output data to that Line platform, which means we output the corresponding things depending on what the command is.
 
-## structure of the code 
-```
-create_table_query = """
-    CREATE TABLE invoices (
-        invoice_id INT AUTO_INCREMENT PRIMARY KEY,
-        user_id VARCHAR(255),
-        invoice_number VARCHAR(255),
-        invoice_date DATE,
-        invoice_month INT,
-        invoice_year INT,
-        invoice_amount DECIMAL(10,2),
-        invoice_number_last_three INT,
-        FOREIGN KEY (user_id) REFERENCES users(user_id)
-    );
 
-    """
-``` 
-creates the table called invoces
 
-## procedure of controlling mysql 
-log in to sql, note that pbc is the username
-```
-mysql -u pbc -p
-```
-switch to desire database 
-```
-USE invoice;
-```
-use the SELECT statement to display the data in a table.
-```
-SELECT * FROM invoices;
-```
 
-## problem solving 
-- https://ui-code.com/archives/293
-- https://www.cnblogs.com/ywb123/p/16696584.html
-- https://www.digitalocean.com/community/tutorials/how-to-create-a-new-user-and-grant-permissions-in-mysql
+
 
 ## function information !!! 
 
-only insert function takes the date with three parameters,
+Only insert function takes the date with three parameters,
 other funcitons including 
-
+``` python
+def count_normal():  
+def add_up_persons_monthly_cost():  
+def count_special():
+def count_super ():
 ```
-count_normal(invoice_number, user_id, date):
-
-    
-def add_up_persons_monthly_cost(user_id, date):
-
-        
-def count_special(invoice_number, user_id, date):
-
-
-
-def count_super (invoice_number, user_id, date):
-```
-should only take the date with year and month, it can be easily convert by ```strip_day(date):```
+should only take the date with year and month, it can be easily convert by ```strip_day(date)```. 
 
 ## function usage 
 ```
 connect_to_SQL()
 ```
-You do not need it, I've wrapped it in other functions
+> You do not need it, I've wrapped it in other functions
 
 ```
 create_table()
 ```
-create two table called users and invoices
+Create two table called users and invoices
 
 ```
 split_date_3(date_string)
@@ -169,3 +128,23 @@ mainly the same as ```count_special```
 but the price is within (20000000)
 
 note that the date should be in the format of YYYY/MM
+
+
+## procedure of controlling directly using SQL 
+log in to sql, note that pbc is the username
+```
+mysql -u pbc -p
+```
+switch to desire database 
+```
+USE invoice;
+```
+use the SELECT statement to display the data in a table.
+```
+SELECT * FROM invoices;
+```
+
+## problem solving 
+- https://ui-code.com/archives/293
+- https://www.cnblogs.com/ywb123/p/16696584.html
+- https://www.digitalocean.com/community/tutorials/how-to-create-a-new-user-and-grant-permissions-in-mysql
