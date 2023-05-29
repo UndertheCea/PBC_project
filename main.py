@@ -49,6 +49,7 @@ def create_table():
             invoice_amount DECIMAL(10,2),
             invoice_number_last_three INT,
             invoice_tag VARCHAR(255),
+            invoice_number_whole VARCHAR(255),
             
             FOREIGN KEY (user_id) REFERENCES users(user_id)
         );
@@ -119,8 +120,18 @@ def list_users():
     
     return user_dict
 
+def strip_alphabet(string):
+    # Remove all non-digit characters from the string
+    digits = ''.join(char for char in string if char.isdigit())
+
+    # Extract the last 8 digits from the remaining string
+    last_eight = digits[-8:]
+
+    return last_eight
+
 def insert_invoice(user_id, invoice_number, invoice_date, invoice_amount, invoice_tag):
     cnx, cursor = connect_to_SQL()
+    invoice_number_only = strip_alphabet(invoice_number)
 
     select_query = "SELECT * FROM users WHERE user_id = %s"
     user_data = (user_id,)
@@ -142,8 +153,9 @@ def insert_invoice(user_id, invoice_number, invoice_date, invoice_amount, invoic
     else:
         insert_query = """INSERT INTO invoices (user_id, invoice_number, invoice_date, 
                                                 invoice_number_last_three, invoice_amount,
-                                                invoice_year, invoice_month, invoice_tag) VALUES (%s, %s, %s, %s, %s, %s, %s, %s);"""
-        invoice_data = (user_id, invoice_number, invoice_date, invoice_number[-3:], invoice_amount, year, month, invoice_tag)
+                                                invoice_year, invoice_month, invoice_tag, 
+                                                invoice_number_whole) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s);"""
+        invoice_data = (user_id, invoice_number_only, invoice_date, invoice_number[-3:], invoice_amount, year, month, invoice_tag, invoice_number)
         cursor.execute(insert_query, invoice_data)
         cnx.commit()
         print("Invoice inserted successfully")
@@ -154,7 +166,7 @@ def insert_invoice(user_id, invoice_number, invoice_date, invoice_amount, invoic
 
 def insert_expense(user_id, invoice_date, invoice_amount, invoice_tag):
     cnx, cursor = connect_to_SQL()
-
+    
     select_query = "SELECT * FROM users WHERE user_id = %s"
     user_data = (user_id,)
     cursor.execute(select_query, user_data)
@@ -262,28 +274,28 @@ def count_normal(invoice_number, user_id, date):
         this_number = 0
         length = 0
         for i in range(1, len(invoice_number) + 1):
-            if row[2][-i] != invoice_number[-i] or i > 8:
+            if row[9][-i] != invoice_number[-i] or i > 8:
                 break
             else:
                 length += 1
         if length == 3:
             this_number = 200
-            Invoice_number_and_price[row[2]] = 200
+            Invoice_number_and_price[row[9]] = 200
         elif length == 4:
             this_number = 1000
-            Invoice_number_and_price[row[2]] = 1000
+            Invoice_number_and_price[row[9]] = 1000
         elif length == 5:
             this_number = 4000
-            Invoice_number_and_price[row[2]] = 4000
+            Invoice_number_and_price[row[9]] = 4000
         elif length == 6:
             this_number = 10000
-            Invoice_number_and_price[row[2]] = 10000
+            Invoice_number_and_price[row[9]] = 10000
         elif length == 7:
             this_number = 40000
-            Invoice_number_and_price[row[2]] = 40000
+            Invoice_number_and_price[row[9]] = 40000
         elif length == 8:
             this_number = 200000
-            Invoice_number_and_price[row[2]] = 200000   
+            Invoice_number_and_price[row[9]] = 200000   
         total += this_number
     Invoice_number_and_price['total'] = total
     # Close the cursor and connection
@@ -330,7 +342,7 @@ def count_special(invoice_number, user_id, date):
     Invoice_number_and_price = {}
     for row in result:
         count += 1
-        Invoice_number_and_price[row[2]] = 1000000
+        Invoice_number_and_price[row[9]] = 1000000
 
     
     money = 10000000*count
@@ -341,6 +353,8 @@ def count_special(invoice_number, user_id, date):
     cnx.close()
     
     return Invoice_number_and_price
+
+
 
 def count_super (invoice_number, user_id, date):
     cnx, cursor = connect_to_SQL()
@@ -357,7 +371,7 @@ def count_super (invoice_number, user_id, date):
     Invoice_number_and_price = {}
     for row in result:
         count += 1
-        Invoice_number_and_price[row[2]] = 2000000
+        Invoice_number_and_price[row[9]] = 2000000
     
     money = 2000000*count
     Invoice_number_and_price["total"] = money
@@ -370,8 +384,8 @@ def count_super (invoice_number, user_id, date):
 
 if __name__ == "__main__":
     # example 
-    # drop_table("invoices")
-    # drop_table("users")
+    drop_table("invoices")
+    drop_table("users")
     create_table()
     insert_user("A123456789")
     # insert_invoice(user_id, invoice_number, invoice_date, invoice_amount):
@@ -392,7 +406,6 @@ if __name__ == "__main__":
     insert_expense("A123456789", "2020/01/01", 100, "expense")
     insert_expense("B123456789", "2020/02/01", 200, "expense")
     print("list users:")
-    print(list_users())
     display_table("users")
     print("before sort: ")
     display_table("invoices")
@@ -402,10 +415,10 @@ if __name__ == "__main__":
     print("start to print the finding:")
     
     # count_normal(invoice_number, user_id, date)
-    print(count_normal("AA12345678", "A123456789", "2020/01"))
+    print(count_normal("12345678", "A123456789", "2020/01"))
     print(add_up_persons_monthly_cost("A123456789", "2020/01"))
-    print(count_special("AA12345678", "A123456789", "2020/01"))
-    print(count_super("AA12345678", "A123456789", "2020/01"))
+    print(count_special("12345678", "A123456789", "2020/01"))
+    print(count_super("12345678", "A123456789", "2020/01"))
     
     
     
